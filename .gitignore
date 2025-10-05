@@ -1,0 +1,8 @@
+# Secrets
+*-secret.yaml
+*-secrets.yaml
+
+# SSH Keys
+*.pub
+*.pem
+*.key

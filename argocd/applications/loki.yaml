@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  project: default
+
+  sources:
+    # Helm Chart
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki
+      targetRevision: 6.23.0
+      helm:
+        releaseName: loki
+        valueFiles:
+          - $values/values/loki-values.yaml
+
+    # Values 파일 (GitHub SSH - koalakid1 사용)
+    - repoURL: git@github.com:koalakid1/zgoome-infra.git
+      targetRevision: main
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
