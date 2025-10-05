@@ -44,6 +44,7 @@ kube-prometheus-stack:
         cert-manager.io/cluster-issuer: letsencrypt-production
       hosts:
         - grafana.zgoo.me
+      path: "/"
       tls:
         - hosts:
             - grafana.zgoo.me
