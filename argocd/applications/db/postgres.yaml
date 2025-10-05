@@ -12,7 +12,7 @@ spec:
     # Helm Chart
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
-      targetRevision: 15.5.0  # PostgreSQL 16 with ARM64 support
+      targetRevision: 16.2.1
       helm:
         releaseName: postgres
         valueFiles:
