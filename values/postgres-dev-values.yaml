@@ -1,0 +1,46 @@
+# Bitnami PostgreSQL Helm Chart - Development 환경
+# https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+
+auth:
+  # Sealed Secret 사용
+  existingSecret: postgres-dev
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: password
+  username: root
+  database: dev_movie
+
+# Primary 설정
+primary:
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Service 설정
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+
+# Read Replicas 비활성화
+readReplicas:
+  replicaCount: 0
+
+# Metrics 비활성화 (필요시 활성화)
+metrics:
+  enabled: false
+
+# 백업 설정 (추후 추가 가능)
+# backup:
+#   enabled: true
+#   cronjob:
+#     schedule: "0 2 * * *"
