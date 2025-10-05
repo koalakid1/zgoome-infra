@@ -76,5 +76,41 @@ Done!
 ### 요구사항
 
 - `kubeseal` 설치 필수
+- `kubectl` 클러스터 접근 권한
 - Sealed Secrets Controller가 kube-system 네임스페이스에 실행 중이어야 함
-- KUBECONFIG 환경변수 설정 (기본값: `/etc/rancher/k3s/k3s.yaml`)
+
+### Kubeconfig 설정
+
+스크립트는 다음 순서로 kubeconfig를 자동 감지합니다:
+
+1. **KUBECONFIG 환경변수가 설정된 경우** - 해당 설정 사용
+2. **k3s 서버에서 실행** - `/etc/rancher/k3s/k3s.yaml` 사용
+3. **로컬 환경에서 실행** - `~/.kube/config` 사용 (current context)
+4. **기본값** - kubectl의 기본 동작 따름
+
+#### 로컬(원격)에서 실행하는 경우
+
+```bash
+# kubectl 설정 확인
+kubectl cluster-info
+
+# current context 확인
+kubectl config current-context
+
+# 스크립트 실행
+./scripts/create-sealed-secret.sh
+```
+
+#### 서버에서 직접 실행하는 경우
+
+```bash
+# k3s 환경에서 자동 감지됨
+./scripts/create-sealed-secret.sh
+```
+
+#### KUBECONFIG 직접 지정
+
+```bash
+export KUBECONFIG=/path/to/kubeconfig
+./scripts/create-sealed-secret.sh
+```

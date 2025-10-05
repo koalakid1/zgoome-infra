@@ -11,7 +11,26 @@ NC='\033[0m' # No Color
 # Script configuration
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SECRETS_DIR="${REPO_ROOT}/manifests/secrets"
-KUBECONFIG=${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}
+
+# Auto-detect kubeconfig
+if [ -z "$KUBECONFIG" ]; then
+    # Try common locations
+    if [ -f "/etc/rancher/k3s/k3s.yaml" ]; then
+        # Running on k3s server
+        export KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
+        echo -e "${YELLOW}Using k3s config: /etc/rancher/k3s/k3s.yaml${NC}"
+    elif [ -f "$HOME/.kube/config" ]; then
+        # Standard kubectl config
+        export KUBECONFIG="$HOME/.kube/config"
+        echo -e "${YELLOW}Using kubectl config: ~/.kube/config${NC}"
+    else
+        # Use kubectl's default behavior (uses current context)
+        echo -e "${YELLOW}Using kubectl default configuration${NC}"
+    fi
+else
+    echo -e "${YELLOW}Using KUBECONFIG: $KUBECONFIG${NC}"
+fi
+echo ""
 
 echo -e "${GREEN}=== Sealed Secret Generator ===${NC}"
 echo ""
@@ -110,7 +129,6 @@ OUTPUT_FILE="${SECRETS_DIR}/sealed-${SECRET_NAME}-${NAMESPACE}.yaml"
 echo ""
 echo -e "${YELLOW}Generating sealed secret...${NC}"
 
-export KUBECONFIG
 if kubeseal -o yaml --scope "$SCOPE" \
     --controller-name sealed-secrets \
     --controller-namespace kube-system \
@@ -118,6 +136,8 @@ if kubeseal -o yaml --scope "$SCOPE" \
     echo -e "${GREEN}✓ Sealed secret created: ${OUTPUT_FILE}${NC}"
 else
     echo -e "${RED}Error: Failed to create sealed secret${NC}"
+    echo -e "${RED}Tip: Make sure kubectl can access your cluster${NC}"
+    echo -e "${RED}     Run 'kubectl cluster-info' to verify connection${NC}"
     rm -f "$TEMP_SECRET"
     exit 1
 fi
