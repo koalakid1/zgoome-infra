@@ -1,0 +1,163 @@
+---
+# PostgreSQL 백업 설정 for db namespace
+# 매일 백업 CronJob (7일 보관)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-daily
+  namespace: db
+spec:
+  schedule: "0 2 * * *"  # 매일 새벽 2시
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+
+              # 환경 변수
+              BACKUP_DIR="/backup/daily"
+              DATE=$(date +%Y%m%d_%H%M%S)
+              BACKUP_FILE="postgres_daily_${DATE}.sql"
+              RETENTION_DAYS=7
+
+              mkdir -p ${BACKUP_DIR}
+              echo "=========================================="
+              echo "Starting daily backup at $(date)"
+              echo "=========================================="
+
+              # 백업 실행
+              PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
+                -h postgres \
+                -U postgres \
+                -d postgres \
+                > ${BACKUP_DIR}/${BACKUP_FILE}
+
+              # 백업 파일 크기 확인
+              BACKUP_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE} | cut -f1)
+              echo "Backup file created: ${BACKUP_FILE} (${BACKUP_SIZE})"
+
+              # 압축
+              echo "Compressing backup..."
+              gzip ${BACKUP_DIR}/${BACKUP_FILE}
+
+              COMPRESSED_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE}.gz | cut -f1)
+              echo "Compressed: ${BACKUP_FILE}.gz (${COMPRESSED_SIZE})"
+
+              # 7일 이상 된 백업 삭제
+              echo "Cleaning up old daily backups (older than ${RETENTION_DAYS} days)..."
+              DELETED=$(find ${BACKUP_DIR} -name "postgres_daily_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete -print | wc -l)
+              echo "Deleted ${DELETED} old backup(s)"
+
+              echo "=========================================="
+              echo "Current daily backups:"
+              ls -lh ${BACKUP_DIR}/postgres_daily_*.sql.gz 2>/dev/null || echo "No backups found"
+              echo "=========================================="
+              echo "Total backup storage used:"
+              du -sh ${BACKUP_DIR}
+              echo "=========================================="
+              echo "Daily backup completed successfully!"
+
+            env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: postgres-backup-pvc
+---
+# 주간 백업 CronJob (4주 보관)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-weekly
+  namespace: db
+spec:
+  schedule: "0 3 * * 0"  # 매주 일요일 새벽 3시
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+
+              # 환경 변수
+              BACKUP_DIR="/backup/weekly"
+              DATE=$(date +%Y%m%d)
+              BACKUP_FILE="postgres_weekly_${DATE}.sql"
+              RETENTION_DAYS=28
+
+              mkdir -p ${BACKUP_DIR}
+              echo "=========================================="
+              echo "Starting weekly backup at $(date)"
+              echo "=========================================="
+
+              # 백업 실행
+              PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
+                -h postgres \
+                -U postgres \
+                -d postgres \
+                > ${BACKUP_DIR}/${BACKUP_FILE}
+
+              # 백업 파일 크기 확인
+              BACKUP_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE} | cut -f1)
+              echo "Backup file created: ${BACKUP_FILE} (${BACKUP_SIZE})"
+
+              # 압축
+              echo "Compressing backup..."
+              gzip ${BACKUP_DIR}/${BACKUP_FILE}
+
+              COMPRESSED_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE}.gz | cut -f1)
+              echo "Compressed: ${BACKUP_FILE}.gz (${COMPRESSED_SIZE})"
+
+              # 4주 이상 된 백업 삭제
+              echo "Cleaning up old weekly backups (older than ${RETENTION_DAYS} days)..."
+              DELETED=$(find ${BACKUP_DIR} -name "postgres_weekly_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete -print | wc -l)
+              echo "Deleted ${DELETED} old backup(s)"
+
+              echo "=========================================="
+              echo "Current weekly backups:"
+              ls -lh ${BACKUP_DIR}/postgres_weekly_*.sql.gz 2>/dev/null || echo "No backups found"
+              echo "=========================================="
+              echo "Total backup storage used:"
+              du -sh ${BACKUP_DIR}
+              echo "=========================================="
+              echo "Weekly backup completed successfully!"
+
+            env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: postgres-backup-pvc
