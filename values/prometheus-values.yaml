@@ -23,7 +23,11 @@
   # Grafana 설정 + Ingress
   grafana:
     enabled: true
-    adminPassword: "admin"
+    defaultDashboardsEnabled: false
+    admin:
+      existingSecret: grafana-admin
+      userKey: admin-user
+      passwordKey: admin-password
     persistence:
       enabled: true
       size: 2Gi
