@@ -26,7 +26,6 @@ spec:
               # 환경 변수
               BACKUP_DIR="/backup/daily"
               DATE=$(date +%Y%m%d_%H%M%S)
-              BACKUP_FILE="postgres_daily_${DATE}.sql"
               RETENTION_DAYS=7
 
               mkdir -p ${BACKUP_DIR}
@@ -34,32 +33,45 @@ spec:
               echo "Starting daily backup at $(date)"
               echo "=========================================="
 
-              # 백업 실행
-              PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
-                -h postgres \
-                -U postgres \
-                -d postgres \
-                > ${BACKUP_DIR}/${BACKUP_FILE}
+              # DB 목록 자동 조회 (시스템 DB 제외)
+              DBS=$(PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U postgres -d postgres -t -c \
+                "SELECT datname FROM pg_database WHERE datistemplate = false AND datname != 'postgres';")
 
-              # 백업 파일 크기 확인
-              BACKUP_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE} | cut -f1)
-              echo "Backup file created: ${BACKUP_FILE} (${BACKUP_SIZE})"
+              echo "Found databases: $DBS"
+              echo ""
 
-              # 압축
-              echo "Compressing backup..."
-              gzip ${BACKUP_DIR}/${BACKUP_FILE}
+              # 각 DB 백업
+              for DB in $DBS; do
+                DB_TRIMMED=$(echo $DB | xargs)  # trim whitespace
+                if [ -n "$DB_TRIMMED" ]; then
+                  echo "Backing up database: $DB_TRIMMED"
 
-              COMPRESSED_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE}.gz | cut -f1)
-              echo "Compressed: ${BACKUP_FILE}.gz (${COMPRESSED_SIZE})"
+                  BACKUP_FILE="${DB_TRIMMED}_daily_${DATE}.sql"
+                  PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
+                    -h postgres \
+                    -U postgres \
+                    -d $DB_TRIMMED \
+                    > ${BACKUP_DIR}/${BACKUP_FILE}
+
+                  BACKUP_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE} | cut -f1)
+                  echo "  Created: ${BACKUP_FILE} (${BACKUP_SIZE})"
+
+                  gzip ${BACKUP_DIR}/${BACKUP_FILE}
+                  COMPRESSED_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE}.gz | cut -f1)
+                  echo "  Compressed: ${BACKUP_FILE}.gz (${COMPRESSED_SIZE})"
+                  echo ""
+                fi
+              done
 
               # 7일 이상 된 백업 삭제
+              echo "=========================================="
               echo "Cleaning up old daily backups (older than ${RETENTION_DAYS} days)..."
-              DELETED=$(find ${BACKUP_DIR} -name "postgres_daily_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete -print | wc -l)
+              DELETED=$(find ${BACKUP_DIR} -name "*_daily_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete -print | wc -l)
               echo "Deleted ${DELETED} old backup(s)"
 
               echo "=========================================="
               echo "Current daily backups:"
-              ls -lh ${BACKUP_DIR}/postgres_daily_*.sql.gz 2>/dev/null || echo "No backups found"
+              ls -lh ${BACKUP_DIR}/*_daily_*.sql.gz 2>/dev/null || echo "No backups found"
               echo "=========================================="
               echo "Total backup storage used:"
               du -sh ${BACKUP_DIR}
@@ -107,7 +119,6 @@ spec:
               # 환경 변수
               BACKUP_DIR="/backup/weekly"
               DATE=$(date +%Y%m%d)
-              BACKUP_FILE="postgres_weekly_${DATE}.sql"
               RETENTION_DAYS=28
 
               mkdir -p ${BACKUP_DIR}
@@ -115,32 +126,45 @@ spec:
               echo "Starting weekly backup at $(date)"
               echo "=========================================="
 
-              # 백업 실행
-              PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
-                -h postgres \
-                -U postgres \
-                -d postgres \
-                > ${BACKUP_DIR}/${BACKUP_FILE}
+              # DB 목록 자동 조회 (시스템 DB 제외)
+              DBS=$(PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U postgres -d postgres -t -c \
+                "SELECT datname FROM pg_database WHERE datistemplate = false AND datname != 'postgres';")
 
-              # 백업 파일 크기 확인
-              BACKUP_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE} | cut -f1)
-              echo "Backup file created: ${BACKUP_FILE} (${BACKUP_SIZE})"
+              echo "Found databases: $DBS"
+              echo ""
 
-              # 압축
-              echo "Compressing backup..."
-              gzip ${BACKUP_DIR}/${BACKUP_FILE}
+              # 각 DB 백업
+              for DB in $DBS; do
+                DB_TRIMMED=$(echo $DB | xargs)  # trim whitespace
+                if [ -n "$DB_TRIMMED" ]; then
+                  echo "Backing up database: $DB_TRIMMED"
 
-              COMPRESSED_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE}.gz | cut -f1)
-              echo "Compressed: ${BACKUP_FILE}.gz (${COMPRESSED_SIZE})"
+                  BACKUP_FILE="${DB_TRIMMED}_weekly_${DATE}.sql"
+                  PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
+                    -h postgres \
+                    -U postgres \
+                    -d $DB_TRIMMED \
+                    > ${BACKUP_DIR}/${BACKUP_FILE}
+
+                  BACKUP_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE} | cut -f1)
+                  echo "  Created: ${BACKUP_FILE} (${BACKUP_SIZE})"
+
+                  gzip ${BACKUP_DIR}/${BACKUP_FILE}
+                  COMPRESSED_SIZE=$(du -h ${BACKUP_DIR}/${BACKUP_FILE}.gz | cut -f1)
+                  echo "  Compressed: ${BACKUP_FILE}.gz (${COMPRESSED_SIZE})"
+                  echo ""
+                fi
+              done
 
               # 4주 이상 된 백업 삭제
+              echo "=========================================="
               echo "Cleaning up old weekly backups (older than ${RETENTION_DAYS} days)..."
-              DELETED=$(find ${BACKUP_DIR} -name "postgres_weekly_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete -print | wc -l)
+              DELETED=$(find ${BACKUP_DIR} -name "*_weekly_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete -print | wc -l)
               echo "Deleted ${DELETED} old backup(s)"
 
               echo "=========================================="
               echo "Current weekly backups:"
-              ls -lh ${BACKUP_DIR}/postgres_weekly_*.sql.gz 2>/dev/null || echo "No backups found"
+              ls -lh ${BACKUP_DIR}/*_weekly_*.sql.gz 2>/dev/null || echo "No backups found"
               echo "=========================================="
               echo "Total backup storage used:"
               du -sh ${BACKUP_DIR}
