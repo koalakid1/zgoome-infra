@@ -1,12 +1,6 @@
 # Bitnami PostgreSQL Helm Chart
 # https://github.com/bitnami/charts/tree/main/bitnami/postgresql
 
-# Image 설정 (공식 PostgreSQL ARM64)
-image:
-  registry: docker.io
-  repository: library/postgres
-  tag: "17"
-
 auth:
   # Sealed Secret 사용 (db 네임스페이스)
   existingSecret: postgres-helm-secret
