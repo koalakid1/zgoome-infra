@@ -42,14 +42,12 @@ kube-prometheus-stack:
       ingressClassName: traefik
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-production
-      path: /
-      pathType: Prefix
       hosts:
         - grafana.zgoo.me
       tls:
-        - secretName: grafana-tls
-          hosts:
+        - hosts:
             - grafana.zgoo.me
+          secretName: grafana-tls
 
     # Loki 데이터소스 자동 추가
     additionalDataSources:
