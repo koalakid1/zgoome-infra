@@ -1,0 +1,71 @@
+# Promtail 설정 - 모든 Pod 로그 수집
+
+# Loki 연결
+config:
+  clients:
+    - url: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
+
+  # 로그 수집 파이프라인
+  snippets:
+    scrapeConfigs: |
+      # Pod 로그 수집
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        pipeline_stages:
+          - cri: {}
+        relabel_configs:
+          # 네임스페이스
+          - source_labels:
+              - __meta_kubernetes_pod_node_name
+            target_label: node_name
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: pod
+          - source_labels:
+              - __meta_kubernetes_pod_container_name
+            target_label: container
+          # 로그 파일 경로
+          - replacement: /var/log/pods/*$1/*.log
+            separator: /
+            source_labels:
+              - __meta_kubernetes_pod_uid
+              - __meta_kubernetes_pod_container_name
+            target_label: __path__
+
+# DaemonSet 설정
+daemonset:
+  enabled: true
+
+# 리소스 제한
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# 서비스어카운트 권한 (Pod 정보 읽기)
+serviceAccount:
+  create: true
+
+# 우선순위 클래스 (선택사항)
+priorityClassName: ""
+
+# 톨러레이션 (모든 노드에 배포)
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+
+# 네임스페이스 필터 (선택사항 - 모든 네임스페이스 수집)
+# extraArgs:
+#   - -config.expand-env=true
+
+# ARM64 지원
+image:
+  registry: docker.io
+  repository: grafana/promtail
