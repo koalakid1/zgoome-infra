@@ -1,0 +1,90 @@
+kube-prometheus-stack:
+  # Prometheus 설정
+  prometheus:
+    prometheusSpec:
+      retention: 15d
+      retentionSize: "8GB"
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+
+  # Grafana 설정 + Ingress
+  grafana:
+    enabled: true
+    adminPassword: "admin"
+    persistence:
+      enabled: true
+      size: 2Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    # Grafana Ingress 설정
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-production
+      hosts:
+        - grafana.zgoo.me
+      tls:
+        - secretName: grafana-tls
+          hosts:
+            - grafana.zgoo.me
+
+    # Loki 데이터소스 자동 추가
+    additionalDataSources:
+      - name: Loki
+        type: loki
+        url: http://loki-gateway.monitoring.svc.cluster.local
+        access: proxy
+        isDefault: false
+
+  # AlertManager
+  alertmanager:
+    alertmanagerSpec:
+      retention: 120h
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      storage:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 2Gi
+
+  # ARM64 지원
+  nodeExporter:
+    enabled: true
+
+  kubeStateMetrics:
+    enabled: true
+
+  # 불필요한 규칙 비활성화
+  defaultRules:
+    rules:
+      etcd: false
+      kubeScheduler: false

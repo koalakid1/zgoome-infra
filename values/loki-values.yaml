@@ -1,0 +1,74 @@
+loki:
+  auth_enabled: false
+
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+
+  # 로그 보관 설정
+  limits_config:
+    retention_period: 168h  # 7일
+    max_query_length: 721h
+    max_query_lookback: 168h
+
+  # 테이블 매니저 - 오래된 로그 삭제
+  table_manager:
+    retention_deletes_enabled: true
+    retention_period: 168h
+
+# 단일 바이너리 모드 (경량)
+deploymentMode: SingleBinary
+
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 20Gi
+
+# Gateway (nginx)
+gateway:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  # Loki Gateway Ingress (선택사항)
+  ingress:
+    enabled: false  # Grafana에서만 접근
+
+# ARM64 이미지 명시
+image:
+  registry: docker.io
+  repository: grafana/loki
+
+# 모니터링
+monitoring:
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+
+# Promtail (로그 수집)
+promtail:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
