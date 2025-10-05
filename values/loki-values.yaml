@@ -10,6 +10,17 @@ loki:
   storage:
     type: filesystem
 
+  # Schema 설정 (필수)
+  schemaConfig:
+    configs:
+      - from: 2024-01-01
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
   # 로그 보관 설정
   limits_config:
     retention_period: 168h  # 7일
@@ -33,6 +44,14 @@ singleBinary:
   persistence:
     enabled: true
     size: 20Gi
+
+# SimpleScalable 모드 비활성화 (SingleBinary 사용)
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
 
 # Gateway (nginx)
 gateway:
