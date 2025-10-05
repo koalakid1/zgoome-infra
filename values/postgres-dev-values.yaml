@@ -39,8 +39,19 @@ readReplicas:
 metrics:
   enabled: false
 
-# 백업 설정 (추후 추가 가능)
-# backup:
-#   enabled: true
-#   cronjob:
-#     schedule: "0 2 * * *"
+# 백업 설정
+backup:
+  enabled: true
+  cronjob:
+    # 매일 새벽 2시 백업
+    schedule: "0 2 * * *"
+    historyLimit: 3
+    storage:
+      existingClaim: ""  # 자동 생성
+      size: 20Gi
+      storageClass: local-path
+
+  # 주간 백업 (일요일 새벽 3시)
+  # 별도로 CronJob 추가 필요시 주석 해제
+  # weeklyBackup:
+  #   schedule: "0 3 * * 0"
