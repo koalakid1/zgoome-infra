@@ -13,6 +13,8 @@ spec:
     repoURL: git@github.com:koalakid1/zgoome-infra.git
     targetRevision: main
     path: argocd/applications
+    directory:
+      recurse: true
 
   destination:
     server: https://kubernetes.default.svc

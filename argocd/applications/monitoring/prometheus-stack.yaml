@@ -1,20 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: loki
+  name: prometheus-stack
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
 
   sources:
     # Helm Chart
-    - repoURL: https://grafana.github.io/helm-charts
-      chart: loki
-      targetRevision: 6.23.0
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 65.8.1
       helm:
-        releaseName: loki
+        releaseName: prometheus-stack
         valueFiles:
-          - $values/values/loki-values.yaml
+          - $values/values/prometheus-values.yaml
 
     # Values 파일 (GitHub SSH - koalakid1 사용)
     - repoURL: git@github.com:koalakid1/zgoome-infra.git
@@ -31,3 +33,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
