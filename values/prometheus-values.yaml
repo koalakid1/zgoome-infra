@@ -1,4 +1,3 @@
-kube-prometheus-stack:
   # Prometheus 설정
   prometheus:
     prometheusSpec:
