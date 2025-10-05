@@ -42,6 +42,8 @@ kube-prometheus-stack:
       ingressClassName: traefik
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-production
+      path: /
+      pathType: Prefix
       hosts:
         - grafana.zgoo.me
       tls:
