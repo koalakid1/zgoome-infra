@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: postgres-dev
+  name: postgres
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "0"
@@ -14,9 +14,9 @@ spec:
       chart: postgresql
       targetRevision: 16.2.1
       helm:
-        releaseName: postgres-dev
+        releaseName: postgres
         valueFiles:
-          - $values/values/postgres-dev-values.yaml
+          - $values/values/postgres-values.yaml
 
     # Values 파일 (GitHub SSH - koalakid1 사용)
     - repoURL: git@github.com:koalakid1/zgoome-infra.git

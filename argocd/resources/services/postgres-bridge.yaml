@@ -5,11 +5,9 @@ kind: Service
 metadata:
   name: postgres-service
   namespace: movie
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"  # Postgres 배포 후
 spec:
   type: ExternalName
-  externalName: postgres-dev-postgresql.db.svc.cluster.local
+  externalName: postgres-postgresql.db.svc.cluster.local
   ports:
     - port: 5432
       targetPort: 5432

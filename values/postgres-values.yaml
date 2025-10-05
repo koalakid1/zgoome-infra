@@ -1,14 +1,14 @@
-# Bitnami PostgreSQL Helm Chart - Development 환경
+# Bitnami PostgreSQL Helm Chart
 # https://github.com/bitnami/charts/tree/main/bitnami/postgresql
 
 auth:
-  # Sealed Secret 사용
-  existingSecret: postgres-dev
+  # Sealed Secret 사용 (db 네임스페이스)
+  existingSecret: postgres-helm-secret
   secretKeys:
     adminPasswordKey: postgres-password
     userPasswordKey: password
   username: root
-  database: dev_movie
+  database: postgres  # 기본 DB
 
 # Primary 설정
 primary:
@@ -31,6 +31,29 @@ primary:
     ports:
       postgresql: 5432
 
+  # 초기 DB 생성 스크립트
+  initdb:
+    scripts:
+      01-init-databases.sh: |
+        #!/bin/bash
+        set -e
+
+        echo "Creating application databases..."
+
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+          -- Production DB
+          CREATE DATABASE movie;
+          GRANT ALL PRIVILEGES ON DATABASE movie TO root;
+
+          -- Development DB
+          CREATE DATABASE dev_movie;
+          GRANT ALL PRIVILEGES ON DATABASE dev_movie TO root;
+
+          \l
+        EOSQL
+
+        echo "Databases created successfully!"
+
 # Read Replicas 비활성화
 readReplicas:
   replicaCount: 0
@@ -47,11 +70,5 @@ backup:
     schedule: "0 2 * * *"
     historyLimit: 3
     storage:
-      existingClaim: ""  # 자동 생성
       size: 20Gi
       storageClass: local-path
-
-  # 주간 백업 (일요일 새벽 3시)
-  # 별도로 CronJob 추가 필요시 주석 해제
-  # weeklyBackup:
-  #   schedule: "0 3 * * 0"
