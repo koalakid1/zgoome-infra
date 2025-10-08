@@ -1,8 +1,58 @@
-# Secrets
+# Secrets (unsealed)
 *-secret.yaml
 *-secrets.yaml
+!sealed-*.yaml
+secret.yaml
+secrets.yaml
 
 # SSH Keys
 *.pub
 *.pem
 *.key
+
+# Kubeconfig
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+k3s.yaml
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Backups
+*.bak
+*.backup
+*.old
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.Trash-*
+
+# Helm
+charts/
+*.tgz
+
+# Terraform (if used later)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+.cache/

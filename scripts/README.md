@@ -51,14 +51,14 @@ Enter secret data (key=value format, empty line to finish):
     ✓ Added: PASSWORD
 
 Generating sealed secret...
-✓ Sealed secret created: /root/koalakid1/zgoome-infra/manifests/secrets/sealed-test-secret-movie.yaml
+✓ Sealed secret created: /root/zgoome/zgoome-infra/manifests/secrets/sealed-test-secret-movie.yaml
 
 === Summary ===
   Secret name: test-secret
   Namespace: movie
   Scope: namespace-wide
   Keys: USERNAME PASSWORD
-  Output: /root/koalakid1/zgoome-infra/manifests/secrets/sealed-test-secret-movie.yaml
+  Output: /root/zgoome/zgoome-infra/manifests/secrets/sealed-test-secret-movie.yaml
 
 Do you want to commit and push? [y/N]: y
 Enter commit message (default: Add sealed secret test-secret for movie):

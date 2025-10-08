@@ -18,8 +18,8 @@ spec:
         valueFiles:
           - $values/values/loki-values.yaml
 
-    # Values 파일 (GitHub SSH - koalakid1 사용)
-    - repoURL: git@github.com:koalakid1/zgoome-infra.git
+    # Values 파일 (GitHub SSH)
+    - repoURL: git@github.com:zgoome/zgoome-infra.git
       targetRevision: main
       ref: values
 

@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/koalakid2/movieSaver.git
+    repoURL: https://github.com/zgoome/movie-backend.git
     targetRevision: dev
     path: .kubernetes/dev
   destination:

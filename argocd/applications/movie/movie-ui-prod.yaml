@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/koalakid2/movieSelector.git
+    repoURL: https://github.com/zgoome/movie-frontend.git
     targetRevision: main
     path: .kubernetes/prod
   destination:
