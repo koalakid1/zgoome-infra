@@ -18,8 +18,8 @@ spec:
         valueFiles:
           - $values/values/prometheus-values.yaml
 
-    # Values 파일 (GitHub SSH)
-    - repoURL: git@github.com:zgoome/zgoome-infra.git
+    # Values 파일 (GitHub HTTPS)
+    - repoURL: https://github.com/zgoome/zgoome-infra.git
       targetRevision: main
       ref: values
 

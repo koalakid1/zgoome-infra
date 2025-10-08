@@ -88,7 +88,7 @@ The repository uses **App of Apps** pattern with ArgoCD:
 **Helm-based Applications** (with values from this repo):
 - Use `sources` array with two entries:
   - Helm chart from upstream repository
-  - Values file from this repository (via SSH: `git@github.com:zgoome/zgoome-infra.git`)
+  - Values file from this repository (via HTTPS: `https://github.com/zgoome/zgoome-infra.git`)
 - Examples: prometheus-stack, loki, promtail
 
 **Manifest-based Applications**:
@@ -200,13 +200,43 @@ kubectl get applications -n argocd -o custom-columns=NAME:.metadata.name,WAVE:.m
 
 - **IMPORTANT**: ArgoCD applications MUST only use repositories from the `zgoome` GitHub organization
 - All application repositories should be under `github.com/zgoome/*`
-- Use SSH URLs for private repositories: `git@github.com:zgoome/repo.git`
-- Use HTTPS URLs for public Helm charts: `https://prometheus-community.github.io/helm-charts`
+- **Authentication Method**: HTTPS + PAT (Personal Access Token)
+  - GitHub Organizations do not support SSH-based `repo-creds` in ArgoCD
+  - Use HTTPS URLs with PAT authentication configured in ArgoCD
+- Use HTTPS URLs for all repositories and public Helm charts
 
 **Allowed repository pattern**:
-- Infrastructure: `git@github.com:zgoome/zgoome-infra.git` or `https://github.com/zgoome/zgoome-infra.git`
-- Applications: `https://github.com/zgoome/movie-backend.git`, `https://github.com/zgoome/movie-frontend.git`, etc.
-- Helm charts: Public Helm repositories (e.g., Prometheus, Grafana)
+- Infrastructure: `https://github.com/zgoome/zgoome-infra.git`
+- Applications: `https://github.com/zgoome/movie-backend.git`, `https://github.com/zgoome/movie-frontend.git`
+- Helm charts: Public Helm repositories (e.g., `https://prometheus-community.github.io/helm-charts`)
+
+**ArgoCD Repository Credentials Setup**:
+```bash
+# Add repository credentials using HTTPS + PAT
+argocd repo add https://github.com/zgoome/zgoome-infra.git \
+  --username <github-username> \
+  --password <github-pat-token>
+
+# Or configure as credential template for all zgoome repos
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: zgoome-repo-creds
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: git
+  url: https://github.com/zgoome
+  username: <github-username>
+  password: <github-pat-token>
+EOF
+```
+
+**GitHub PAT Token Requirements**:
+- Scope: `repo` (Full control of private repositories)
+- Used for: Accessing private repositories in zgoome organization
 
 ---
 

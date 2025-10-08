@@ -9,7 +9,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:zgoome/zgoome-infra.git
+    repoURL: https://github.com/zgoome/zgoome-infra.git
     targetRevision: main
     path: manifests/ingress
     directory:
